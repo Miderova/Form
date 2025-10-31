@@ -2,22 +2,22 @@ const createUserForm = document.querySelector("[data-create-user-form]");
 const editUserFormDialog = document.querySelector("[data-edit-user-form-dialog]");
 const userContainer = document.querySelector("[data-user-container]");
 
-const MOCK_API_URL = "https://69038df3d0f10a340b24dd28.mockapi.io/users"
-
+const MOCK_API_URL = "https://69038df3d0f10a340b24dd28.mockapi.io/users";
 let users = [];
 
-
-// Клик по контейнеру
-userContainer.addEventListener("click", (e) => {
-    if (e.target.hasAttribute("data-user-edit-btn")) {
-        const userId = e.target.dataset.userId;
-        populateDialog(userId);
+// Получение пользователей 
+const getUsersAsync = async () => {
+    try {
+        const response = await fetch(MOCK_API_URL);
+        users = await response.json();
+        renderUsers();
+    } catch (error) {
+        console.error("Ошибка при загрузке пользователей: ", error.message);
     }
-});
+};
 
-// Отправка формы
-
-createUserForm.addEventListener("submit", (e) => {
+//  Создание пользователя 
+createUserForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const formData = new FormData(createUserForm);
     const formUserData = Object.fromEntries(formData);
@@ -26,114 +26,61 @@ createUserForm.addEventListener("submit", (e) => {
         name: formUserData.userName,
         city: formUserData.userCity,
         email: formUserData.userEmail,
-        avatar: formUserData.userImageUrl,
+        avatar: formUserData.userImageUrl
+    };
+
+    try {
+        const response = await fetch(MOCK_API_URL, {
+            method: "POST",
+            body: JSON.stringify(newUserData),
+            headers: { "Content-type": "application/json" }
+        });
+        const createdUser = await response.json();
+        users.unshift(createdUser);
+        renderUsers();
+        createUserForm.reset();
+        alert("Новый пользователь создан!");
+    } catch (error) {
+        console.error("Ошибка при создании пользователя: ", error.message);
     }
+});
 
-    createNewUserAsync(newUserData);
-})
-
-// Редактирование пользователя
+//  Редактирование пользователя
 const editExistingUserAsync = async (newUserData) => {
     try {
         const response = await fetch(`${MOCK_API_URL}/${newUserData.id}`, {
             method: "PUT",
             body: JSON.stringify(newUserData),
-            headers: {
-                "Content-type": "application/json"
-            }
+            headers: { "Content-type": "application/json" }
         });
-
-        if (response.status === 404) {
-            throw new Error(`Клиентская ошибка`)
-        }
         const editedUser = await response.json();
 
-        users = users.map((user) => {
-            if (user.id === editedUser.id) {
-                return editedUser;
-            }
-            return user;
-        })
+        users = users.map(user => user.id === editedUser.id ? editedUser : user);
+        renderUsers();
         editUserFormDialog.close();
-        renderUsers();
-
-        createUserForm.reset();
-        alert("Поменяли бро")
-
+        alert("Пользователь изменен!");
     } catch (error) {
-        console.error("ОШИБКА при удалении пользователя: ", error.message);
-    }
-}
-
-
-
-// Удаление пользователя
-
-const removeExistingUserAsync = async (userId) => {
-    try {
-        const response = await fetch(`${MOCK_API_URL}/${userId}`, {
-            method: "DELETE",
-        });
-
-        if (response.status === 404) {
-            throw new Error(`${userId} не найден бро`);
-        }
-
-        const removedUser = await response.json();
-        users = users.filter(user => user.id !== removedUser.id);
-        renderUsers();
-
-        alert("Бро удален(");
-
-    } catch (error) {
-        console.error("ОШИБКА при удалении пользователя: ", error.message);
-        alert("Ошибка при удалении: " + error.message);
+        console.error("Ошибка при редактировании пользователя: ", error.message);
     }
 };
 
-//возможность создать пользователя
-
-const createNewUserAsync = async (newUserData) => {
+//  Удаление пользователя 
+const removeExistingUserAsync = async (userId) => {
     try {
-        const response = await fetch(MOCK_API_URL, {
-            method: "POST",
-            body: JSON.stringify(newUserData),
-            headers: {
-                "Content-type": "application/json"
-            }
-        });
-        const newCreatedUser = await response.json();
-
-        users.unshift(newCreatedUser);
+        const response = await fetch(`${MOCK_API_URL}/${userId}`, { method: "DELETE" });
+        const removedUser = await response.json();
+        users = users.filter(user => user.id !== removedUser.id);
         renderUsers();
-
-        createUserForm.reset();
-        alert("Новый бро создан")
-
+        alert("Пользователь удален!");
     } catch (error) {
-        console.error("ОШИБКА при создания новго пользователя: ", error.massage);
+        console.error("Ошибка при удалении пользователя: ", error.message);
     }
-}
+};
 
-
-// получение пользователей
-
-const getUsersAsync = async () => {
-    try {
-        const response = await fetch(MOCK_API_URL);
-        users = await response.json();
-
-        renderUsers();
-    } catch (error) {
-        console.error("ПОЙМАННАЯ ОШИБКА: ", error.massage);
-    }
-}
-
-// отрисовка пользователей
+//  Отрисовка пользователей 
 const renderUsers = () => {
     userContainer.innerHTML = "";
-
-    users.forEach((user) => {
+    users.forEach(user => {
         userContainer.insertAdjacentHTML("beforeend", `
             <div class="user-card">
                 <h3>${user.name}</h3>
@@ -145,10 +92,20 @@ const renderUsers = () => {
             </div>
         `);
     });
-}
+};
 
+//  Клик по контейнеру 
+userContainer.addEventListener("click", (e) => {
+    const userId = e.target.dataset.userId;
+    if (e.target.hasAttribute("data-user-remove-btn")) {
+        if (confirm("Точно удалить пользователя?")) removeExistingUserAsync(userId);
+    }
+    if (e.target.hasAttribute("data-user-edit-btn")) {
+        populateDialog(userId);
+    }
+});
 
-// Заполнение модального окна разметкой формы
+// Заполнение диалога редактирования 
 const populateDialog = (userId) => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
@@ -158,41 +115,36 @@ const populateDialog = (userId) => {
     const editForm = document.createElement("form");
     editForm.classList.add("form");
 
-    const closeFormBtn = document.createElement("button");
-    closeFormBtn.classList.add("close-edit-form-btn");
-    closeFormBtn.type = "button";
-    closeFormBtn.textContent = "❌";
-    closeFormBtn.addEventListener("click", () => editUserFormDialog.close());
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.classList.add("close-edit-form-btn");
+    closeBtn.textContent = "❌";
+    closeBtn.addEventListener("click", () => editUserFormDialog.close());
 
     editForm.innerHTML = `
         <input type="text" name="userId" value="${user.id}" hidden/>
-
         <div class="control-field">
             <label class="form-label">Name</label>
-            <input type="text" class="form-control" name="userName" value="${user.name}" required minlength="2" maxlength="20">
+            <input type="text" name="userName" class="form-control" value="${user.name}" required minlength="2" maxlength="20">
         </div>
-
         <div class="control-field">
             <label class="form-label">City</label>
-            <input type="text" class="form-control" name="userCity" value="${user.city}" required minlength="2" maxlength="20">
+            <input type="text" name="userCity" class="form-control" value="${user.city}" required minlength="2" maxlength="20">
         </div>
-
         <div class="control-field">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control form-control--email" name="userEmail" value="${user.email}" required>
+            <input type="email" name="userEmail" class="form-control" value="${user.email}" required>
         </div>
-
         <div class="control-field">
             <label class="form-label">Images</label>
-            <select name="userImageUrl" class="form-control form-control--images" required>
+            <select name="userImageUrl" class="form-control" required>
                 <option value="">Image URL</option>
-                <option value="img/anime.jpg" ${user.avatar === "img/anime.jpg" ? "selected" : ""}>Anime</option>
-                <option value="img/dog.jpg" ${user.avatar === "img/dog.jpg" ? "selected" : ""}>Dog</option>
-                <option value="img/cartoon.jpg" ${user.avatar === "img/cartoon.jpg" ? "selected" : ""}>Cartoon</option>
+                <option value="img/anime.jpg" ${user.avatar==="img/anime.jpg" ? "selected":""}>Anime</option>
+                <option value="img/dog.jpg" ${user.avatar==="img/dog.jpg" ? "selected":""}>Dog</option>
+                <option value="img/cartoon.jpg" ${user.avatar==="img/cartoon.jpg" ? "selected":""}>Cartoon</option>
             </select>
         </div>
-
-        <button class="btn submit-btn">Edit User</button>
+        <button class="btn submit-btn">Save Changes</button>
     `;
 
     editForm.addEventListener("submit", (e) => {
@@ -200,18 +152,16 @@ const populateDialog = (userId) => {
         const formData = new FormData(editForm);
         const formUserData = Object.fromEntries(formData);
 
-        const newUserData = {
+        editExistingUserAsync({
             id: formUserData.userId,
             name: formUserData.userName,
             city: formUserData.userCity,
             email: formUserData.userEmail,
-            avatar: formUserData.userImageUrl,
-        }
-
-        editExistingUserAsync(newUserData);
+            avatar: formUserData.userImageUrl
+        });
     });
 
-    editUserFormDialog.append(editForm, closeFormBtn);
+    editUserFormDialog.append(editForm, closeBtn);
     editUserFormDialog.showModal();
 };
 
