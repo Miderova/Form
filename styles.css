@@ -8,7 +8,7 @@ body {
     margin: 0;
     font-family: "Shadows Into Light", cursive;
     min-height: 100vh;
-    background: linear-gradient(135deg, #000000, #0d1521, #070e18);
+    background: linear-gradient(135deg, #0b0c10, #1c1f33, #2c3e50);
     color: white;
 }
 
@@ -70,13 +70,13 @@ body {
     font-size: 18px;
     color: white;
     text-transform: uppercase;
-    background-color: rgb(190, 201, 252);
+    background-color: #0b0c10;
     border: none;
     border-radius: 4px;
 }
 
-.form-control:focus-visible{
-    outline: 1px solid white;
+.form-control:focus {
+    outline: 2px solid #45a29e;
 }
 
 .form-control--email {
@@ -84,26 +84,28 @@ body {
 }
 
 .btn {
-    height: 40px;
-    border: none;
-    border-radius: 4px;
-    color: rgb(37, 40, 223);
-    font-weight: 700;
-    text-transform: capitalize;
-    font-size: 16px;
-    cursor: pointer;
+    background: #45a29e;
+    color: #0b0c10;
+    border-radius: 10px;
+    padding: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
-.btn:hover{
-    opacity: 0.9;
+.btn:hover {
+    background: #66fcf1;
+    box-shadow: 0 0 10px rgba(102, 252, 241, 0.7);
 }
 
 .submit-btn {
     margin: 5px 0 0 0;
     background-color: #020202;
+    color: white;
+    border: none;
 }
 
-.users-container{
+.users-container {
     margin: 0 auto;
     padding: 20px 0 50px 0;
     width: 100%;
@@ -112,4 +114,91 @@ body {
     justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
+}
+
+.user-card {
+    background: #1c1c1c;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    max-width: 250px;
+    flex-shrink: 0;
+    border: 1px solid white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    color: white;
+    position: relative;
+
+    h3 {
+        margin: 0;
+    }
+
+    img {
+        width: 100%;
+        object-fit: cover;
+        margin-top: auto;
+    }
+
+    p {
+        margin: 5px 0;
+    }
+
+    span {
+        font-size: 12px;
+    }
+
+    .user-edit-btn {
+        position: absolute;
+        top: 3px;
+        right: 42px;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+
+    .user-remove-btn {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        cursor: pointer;
+        background: none;
+        border: none;
+    }
+}
+
+.user-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(102, 252, 241, 0.5);
+}
+
+.edit-form-dialog {
+    border-radius: 15px;
+    padding: 20px;
+    background: #1c1c1c;
+    border: none;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    margin: 0;
+    position: absolute;
+    min-width: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    .form-label {
+        color: red;
+    }
+
+    .close-edit-form-btn {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        cursor: pointer;
+    }
+}
+
+.edit-form-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.9);
 }
